@@ -39,12 +39,21 @@ export async function POST(request: NextRequest) {
       const rawEmail = await request.text();
       const parsed = await simpleParser(rawEmail);
 
+      // 处理 AddressObject 类型（可能是单个对象或数组）
+      const getAddressText = (addr: any): string => {
+        if (!addr) return '';
+        if (Array.isArray(addr)) {
+          return addr[0]?.text || addr[0]?.address || '';
+        }
+        return addr.text || addr.address || '';
+      };
+
       mailData = {
-        from: parsed.from?.text || '',
-        to: parsed.to?.text || '',
+        from: getAddressText(parsed.from),
+        to: getAddressText(parsed.to),
         subject: parsed.subject || '',
         body: parsed.text || '',
-        html: parsed.html || undefined,
+        html: parsed.html ? String(parsed.html) : undefined,
         messageId: parsed.messageId || undefined,
       };
     }
