@@ -13,35 +13,22 @@ export function hashPassword(password: string): string {
 
 /**
  * 验证密码
- * 支持两种模式：
- * 1. ADMIN_PASSWORD_HASH - 存储预先哈希的密码（推荐）
- * 2. ADMIN_PASSWORD - 存储明文密码，运行时哈希后比较
+ * 用户在环境变量中配置明文密码，系统自动进行 SHA-256 加密后比较
  */
 export function validatePassword(password: string): boolean {
-  const storedHash = process.env.ADMIN_PASSWORD_HASH;
   const plainPassword = process.env.ADMIN_PASSWORD;
 
-  // 如果两者都没配置，拒绝登录
-  if (!storedHash && !plainPassword) {
-    console.error('No password configured in environment (ADMIN_PASSWORD or ADMIN_PASSWORD_HASH)');
+  // 如果没有配置密码，拒绝登录
+  if (!plainPassword) {
+    console.error('No password configured in environment (ADMIN_PASSWORD)');
     return false;
   }
 
-  // 计算输入密码的哈希值
-  const inputHash = hashPassword(password);
+  // 将用户配置的明文密码和输入的密码都进行哈希后比较
+  const storedPasswordHash = hashPassword(plainPassword);
+  const inputPasswordHash = hashPassword(password);
 
-  // 优先使用 ADMIN_PASSWORD_HASH
-  if (storedHash) {
-    return inputHash === storedHash;
-  }
-
-  // 如果只配置了 ADMIN_PASSWORD，哈希后比较
-  if (plainPassword) {
-    const plainPasswordHash = hashPassword(plainPassword);
-    return inputHash === plainPasswordHash;
-  }
-
-  return false;
+  return storedPasswordHash === inputPasswordHash;
 }
 
 /**

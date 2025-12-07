@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
     "lint": "eslint",
-    "hash-password": "node scripts/hashPassword.js",
     "add-rule": "node scripts/addRule.js",
     "test-email": "node scripts/testEmail.js",
     "db:backup": "cp emails.db emails.db.backup",

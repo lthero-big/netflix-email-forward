@@ -22,21 +22,22 @@ Netflix → Gmail → Cloudflare Email Routing → Worker → 本地应用 → �
 ### 本地开发
 
 ```bash
-# 1. 安装依赖
+# 1. 克隆项目
+git clone https://github.com/lthero-big/netflix-email-forward.git
+cd netflix-email-forward
+
+# 2. 安装依赖
 npm install
 
-# 2. 配置环境变量
+# 3. 配置环境变量
 cp .env.example .env.local
+# .env.example 已包含默认配置（密码：admin123）
+# 生产环境建议修改密码和 API 密钥
 
-# 编辑 .env.local，设置密码和 API 密钥
-# ADMIN_PASSWORD_HASH=240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9  # admin123
-# WEBHOOK_API_KEY=Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=
-# PORT=3000
-
-# 3. 初始化数据库和添加规则
+# 4. 初始化数据库和添加规则
 node scripts/addRule.js
 
-# 4. 启动开发服务器
+# 5. 启动开发服务器
 npm run dev
 ```
 
@@ -45,13 +46,24 @@ npm run dev
 ### 服务器部署
 
 ```bash
-# 1. 上传项目到服务器
-rsync -avz --exclude 'node_modules' --exclude '.next' \
-  ./simple-email-forward/ user@your-server:/var/www/simple-email-forward/
-
-# 2. 在服务器上运行一键部署脚本
+# 1. SSH 到服务器
 ssh user@your-server
-cd /var/www/simple-email-forward
+
+# 2. 克隆项目
+cd /var/www
+git clone https://github.com/lthero-big/netflix-email-forward.git
+cd netflix-email-forward
+
+# 3. 配置环境变量
+cp .env.example .env.local
+nano .env.local  # 修改密码和 API 密钥
+
+# 修改配置：
+# ADMIN_PASSWORD=your-strong-password  # 修改默认密码
+# WEBHOOK_API_KEY=$(openssl rand -base64 32)  # 生成随机密钥
+# PORT=3303  # 修改端口（可选）
+
+# 4. 运行一键部署脚本
 bash deploy.sh
 
 # 脚本会自动完成：
@@ -62,10 +74,7 @@ bash deploy.sh
 # - 使用 PM2 启动服务
 ```
 
-配置信息：
-- **端口**：3303
-- **密码**：admin123
-- **API 密钥**：Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=
+**重要**：生产环境请务必修改默认密码和 API 密钥！
 
 ## 🌐 Cloudflare 配置
 
@@ -155,7 +164,6 @@ npm run build            # 构建生产版本
 npm start                # 启动生产服务器
 
 # 工具
-npm run hash-password your-password  # 生成密码哈希
 npm run add-rule         # 添加转发规则
 npm run test-email       # 测试邮件接收
 
@@ -238,10 +246,10 @@ pm2 stop email-forward
 
 ## 🔒 安全建议
 
-1. **修改默认密码**：`npm run hash-password new-password`，更新 `.env.local`
-2. **保护 API 密钥**：不要提交到 Git
+1. **修改默认密码**：编辑 `.env.local` 中的 `ADMIN_PASSWORD`（系统自动加密）
+2. **保护 API 密钥**：使用 `openssl rand -base64 32` 生成随机密钥
 3. **使用 HTTPS**：生产环境必须使用 SSL 证书
-4. **限制访问**：使用防火墙限制 3303 端口访问
+4. **限制访问**：使用防火墙限制端口访问
 5. **定期备份**：`npm run db:backup`
 
 ## 🐛 故障排除
@@ -259,9 +267,9 @@ chmod 664 emails.db
 4. 验证规则匹配
 
 ### 登录失败
-1. 确认密码哈希正确
+1. 确认 `.env.local` 中的 `ADMIN_PASSWORD` 已配置
 2. 清除浏览器缓存和 localStorage
-3. 检查 `.env.local` 文件
+3. 检查服务器日志：`pm2 logs email-forward`
 
 ## 📄 许可证
 
