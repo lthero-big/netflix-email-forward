@@ -5,8 +5,9 @@
 
 const axios = require('axios');
 
-const API_URL = 'http://localhost:3000/api/webhook/email';
-const API_KEY = 'Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=';
+// 从命令行参数获取 URL，或使用默认值
+const API_URL = process.argv[2] || 'http://localhost:3000/api/webhook/email';
+const API_KEY = process.argv[3] || 'Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=';
 
 // 测试邮件数据 - 带 HTML 内容和链接
 const testEmail = {

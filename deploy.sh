@@ -112,14 +112,23 @@ if [ -f ".env.local" ]; then
     echo -e "${GREEN}✅ 环境变量已加载 (PORT=${PORT:-3000})${NC}"
 fi
 
-# 更新 Cloudflare Worker 配置中的 URL
-if [ -f "cloudflare-worker.js" ] && [ -n "${WEB_APP_URL}" ]; then
+# 更新 Cloudflare Worker 配置中的 URL 和 API Key
+if [ -f "cloudflare-worker.js" ]; then
     echo -e "${YELLOW}🔧 正在更新 Cloudflare Worker 配置...${NC}"
     # 备份原文件
     cp cloudflare-worker.js cloudflare-worker.js.bak 2>/dev/null
+    
     # 替换默认 URL
-    sed -i.tmp "s|https://nfcode.lthero.cn|${WEB_APP_URL}|g" cloudflare-worker.js && rm cloudflare-worker.js.tmp 2>/dev/null || true
-    echo -e "${GREEN}✅ Worker 配置已更新为: ${WEB_APP_URL}${NC}"
+    if [ -n "${WEB_APP_URL}" ]; then
+        sed -i.tmp "s|http://your-server-ip:3303|${WEB_APP_URL}|g" cloudflare-worker.js && rm cloudflare-worker.js.tmp 2>/dev/null || true
+        echo -e "${GREEN}✅ Worker URL 已更新为: ${WEB_APP_URL}${NC}"
+    fi
+    
+    # 替换默认 API Key
+    if [ -n "${WEBHOOK_API_KEY}" ]; then
+        sed -i.tmp "s|your-webhook-api-key-here|${WEBHOOK_API_KEY}|g" cloudflare-worker.js && rm cloudflare-worker.js.tmp 2>/dev/null || true
+        echo -e "${GREEN}✅ Worker API Key 已更新${NC}"
+    fi
 fi
 
 # 安装依赖
