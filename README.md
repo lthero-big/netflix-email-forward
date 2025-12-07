@@ -1,36 +1,272 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 简化邮件转发系统
 
-## Getting Started
+一个轻量级的邮件转发系统，专门用于接收和查看 Netflix 等服务的验证码邮件。基于 Next.js + TypeScript + SQLite，支持智能过滤和自动清理。
 
-First, run the development server:
+## ✨ 功能特性
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **密码保护**：SHA-256 加密存储，保护邮件隐私
+- **智能过滤**：按来源、主题、内容进行多维度过滤
+- **自动清理**：邮件保存 7 天后自动删除
+- **本地存储**：SQLite 数据库，数据完全掌控
+- **Cloudflare 集成**：通过 Email Routing + Worker 接收邮件
+- **响应式 UI**：基于 Tailwind CSS，支持移动端
+
+## 📧 邮件流程
+
+```
+Netflix → Gmail → Cloudflare Email Routing → Worker → 本地应用 → 仪表板查看
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 快速开始
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 本地开发
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# 1. 安装依赖
+npm install
 
-## Learn More
+# 2. 配置环境变量
+cp .env.example .env.local
 
-To learn more about Next.js, take a look at the following resources:
+# 编辑 .env.local，设置密码和 API 密钥
+# ADMIN_PASSWORD_HASH=240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9  # admin123
+# WEBHOOK_API_KEY=Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=
+# PORT=3000
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 3. 初始化数据库和添加规则
+node scripts/addRule.js
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 4. 启动开发服务器
+npm run dev
+```
 
-## Deploy on Vercel
+访问 `http://localhost:3000`，密码：`admin123`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 服务器部署
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# 1. 上传项目到服务器
+rsync -avz --exclude 'node_modules' --exclude '.next' \
+  ./simple-email-forward/ user@your-server:/var/www/simple-email-forward/
+
+# 2. 在服务器上运行一键部署脚本
+ssh user@your-server
+cd /var/www/simple-email-forward
+bash deploy.sh
+
+# 脚本会自动完成：
+# - 检查 Node.js 环境
+# - 安装依赖
+# - 初始化数据库
+# - 构建项目
+# - 使用 PM2 启动服务
+```
+
+配置信息：
+- **端口**：3303
+- **密码**：admin123
+- **API 密钥**：Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=
+
+## 🌐 Cloudflare 配置
+
+### 1. 创建 Email Worker
+
+在 Cloudflare Dashboard 创建 Worker，复制 `cloudflare-worker.js` 内容。
+
+### 2. 设置环境变量
+
+在 Worker Settings → Variables 添加：
+- `WEB_APP_URL`: `https://nfcode.lthero.cn`
+- `WEBHOOK_API_KEY`: `Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=`
+
+### 3. 配置 Email Routing
+
+1. **Email** → **Email Routing** → 启用
+2. 创建地址：`netflix@your-domain.com`
+3. 路由规则：Send to Worker → 选择刚创建的 Worker
+
+### 4. Gmail 转发设置
+
+Gmail → 设置 → 过滤器：
+- 来自：`info@account.netflix.com`
+- 主题：`Your temporary access code`
+- 操作：转发到 `netflix@your-domain.com`
+
+## 📁 项目结构
+
+```
+src/
+├── app/
+│   ├── page.tsx              # 首页
+│   ├── login/page.tsx        # 登录
+│   ├── dashboard/page.tsx    # 仪表板
+│   └── api/
+│       ├── webhook/email/route.ts    # 邮件接收
+│       ├── auth/login/route.ts       # 登录 API
+│       └── emails/route.ts           # 邮件列表
+└── lib/
+    ├── db/                   # 数据库
+    ├── emailFilter.ts        # 邮件过滤
+    └── auth.ts               # 认证
+scripts/
+├── addRule.js               # 添加规则
+├── hashPassword.js          # 生成密码哈希
+└── testEmail.js             # 测试邮件
+```
+
+## 项目结构
+
+```
+simple-email-forward/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx              # 首页
+│   │   ├── login/
+│   │   │   └── page.tsx          # 登录页面
+│   │   ├── dashboard/
+│   │   │   └── page.tsx          # 邮件仪表板
+│   │   └── api/
+│   │       ├── webhook/
+│   │       │   └── email/
+│   │       │       └── route.ts  # 邮件接收 Webhook
+│   │       ├── auth/
+│   │       │   └── login/
+│   │       │       └── route.ts  # 登录 API
+│   │       └── emails/
+│   │           └── route.ts      # 邮件列表 API
+│   └── lib/
+│       ├── db/
+│       │   ├── init.ts           # 数据库初始化
+│       │   └── queries.ts        # 数据库查询函数
+│       ├── emailFilter.ts        # 邮件过滤逻辑
+│       └── auth.ts               # 认证工具
+├── emails.db                     # SQLite 数据库（自动创建）
+├── .env.example                  # 环境变量示例
+├── package.json
+└── README.md
+```
+
+## 📝 常用命令
+
+```bash
+# 开发
+npm run dev              # 启动开发服务器
+npm run build            # 构建生产版本
+npm start                # 启动生产服务器
+
+# 工具
+npm run hash-password your-password  # 生成密码哈希
+npm run add-rule         # 添加转发规则
+npm run test-email       # 测试邮件接收
+
+# 数据库
+npm run db:backup        # 备份数据库
+npm run db:restore       # 恢复数据库
+```
+
+## 🔧 管理转发规则
+
+编辑 `scripts/addRule.js` 添加新规则：
+
+```javascript
+stmt.run(
+  'Netflix OTP',           // 规则名称
+  1,                       // 启用（1=是，0=否）
+  '*@account.netflix.com', // 发件人（支持通配符 *）
+  'Your temporary access code', // 主题包含
+  null,                    // 邮件内容包含
+  '',                      // 留空=仅保存本地，不转发
+  'Save Netflix OTP locally'
+);
+```
+
+然后运行：`node scripts/addRule.js`
+
+## 🧪 测试
+
+```bash
+# 测试邮件接收
+curl -X POST http://localhost:3000/api/webhook/email \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=" \
+  -d '{
+    "from": "info@account.netflix.com",
+    "to": "test@example.com",
+    "subject": "Your temporary access code",
+    "body": "Your code is: 123456"
+  }'
+
+# 访问仪表板查看
+# http://localhost:3000/login (密码: admin123)
+```
+
+## 🛠️ 维护
+
+### 定期清理过期邮件
+
+```bash
+# 手动清理
+curl -X GET "http://localhost:3000/api/webhook/email?action=cleanup"
+
+# 或设置 cron 定时任务（每天凌晨 2 点）
+crontab -e
+# 添加：
+0 2 * * * curl -X GET "http://localhost:3303/api/webhook/email?action=cleanup"
+```
+
+### 数据库管理
+
+```bash
+# 查看数据库
+sqlite3 emails.db
+
+# 常用 SQL
+SELECT * FROM forwarded_emails ORDER BY created_at DESC LIMIT 10;
+SELECT COUNT(*) FROM forwarded_emails WHERE expires_at > datetime('now');
+UPDATE forward_rules SET enabled = 0 WHERE id = 1;  # 禁用规则
+```
+
+### 使用 PM2 管理
+
+```bash
+pm2 start npm --name "email-forward" -- start
+pm2 status
+pm2 logs email-forward
+pm2 restart email-forward
+pm2 stop email-forward
+```
+
+## 🔒 安全建议
+
+1. **修改默认密码**：`npm run hash-password new-password`，更新 `.env.local`
+2. **保护 API 密钥**：不要提交到 Git
+3. **使用 HTTPS**：生产环境必须使用 SSL 证书
+4. **限制访问**：使用防火墙限制 3303 端口访问
+5. **定期备份**：`npm run db:backup`
+
+## 🐛 故障排除
+
+### 数据库错误
+```bash
+chmod 755 .
+chmod 664 emails.db
+```
+
+### 邮件未接收
+1. 检查 Worker 日志（Cloudflare Dashboard）
+2. 检查应用日志：`pm2 logs email-forward`
+3. 测试 API 端点
+4. 验证规则匹配
+
+### 登录失败
+1. 确认密码哈希正确
+2. 清除浏览器缓存和 localStorage
+3. 检查 `.env.local` 文件
+
+## 📄 许可证
+
+MIT License
+
+---
+
+**祝你使用愉快！** 🎉
