@@ -81,7 +81,9 @@ export default {
       // 在 Worker Settings → Variables 中设置 WEBHOOK_API_KEY
       const API_KEY = env.WEBHOOK_API_KEY || 'your-webhook-api-key-here';
       
-      console.log('Receiving email from:', message.from, 'to:', message.to);
+      console.log('📧 Receiving email from:', message.from, 'to:', message.to);
+      console.log('🔗 Forwarding to:', WEB_APP_URL);
+      console.log('🔑 Using API Key:', API_KEY ? API_KEY.substring(0, 20) + '...' : 'NONE');
       
       // 读取原始邮件内容 - 使用 message.rawSize 和 ReadableStream
       const rawEmailStream = message.raw;
@@ -105,7 +107,10 @@ export default {
         message.setReject('Email processed and forwarded to web app');
       } else {
         const errorText = await response.text();
-        console.error('❌ Failed to forward email:', response.status, errorText);
+        console.error('❌ Failed to forward email');
+        console.error('   Status:', response.status);
+        console.error('   Response:', errorText);
+        console.error('   Headers:', JSON.stringify([...response.headers.entries()]));
         
         // 转发失败，可以选择拒绝或继续传递
         message.setReject(`Failed to forward: ${response.status}`);

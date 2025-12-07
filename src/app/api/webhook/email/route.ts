@@ -12,11 +12,23 @@ export async function POST(request: NextRequest) {
   try {
     // 验证 API 密钥（可选，用于安全性）
     const apiKey = request.headers.get('x-api-key');
-    if (apiKey && apiKey !== process.env.WEBHOOK_API_KEY) {
+    const expectedKey = process.env.WEBHOOK_API_KEY;
+    
+    console.log('📨 Webhook request received');
+    console.log('   API Key provided:', apiKey ? apiKey.substring(0, 20) + '...' : 'NONE');
+    console.log('   Expected API Key:', expectedKey ? expectedKey.substring(0, 20) + '...' : 'NOT CONFIGURED');
+    console.log('   Content-Type:', request.headers.get('content-type'));
+    
+    if (apiKey && apiKey !== expectedKey) {
+      console.error('❌ API Key mismatch!');
       return NextResponse.json(
         { success: false, error: 'Invalid API key' },
         { status: 401 }
       );
+    }
+    
+    if (!apiKey && expectedKey) {
+      console.warn('⚠️  No API Key provided but one is configured');
     }
 
     // 获取请求体
