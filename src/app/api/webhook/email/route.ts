@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         to: data.to || '',
         subject: data.subject || '',
         body: data.body || '',
+        html: data.html || undefined,
         messageId: data.messageId || undefined,
       };
     } else {
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
         to: parsed.to?.text || '',
         subject: parsed.subject || '',
         body: parsed.text || '',
+        html: parsed.html || undefined,
         messageId: parsed.messageId || undefined,
       };
     }
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest) {
       to_addr: mailData.to,
       subject: mailData.subject,
       body: mailData.body,
-      html_body: null,
+      html_body: mailData.html || null,
       raw_email: null,
       forwarded_to: matchedRule.forward_to || 'local',
       created_at: new Date().toISOString(),

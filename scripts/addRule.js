@@ -33,14 +33,14 @@ const stmt = db.prepare(`
 
 try {
   const result = stmt.run(
-    'Netflix OTP',
-    1,
-    '*@account.netflix.com',
-    'Your temporary access code',
-    null,
-    null,
-    '', // 留空表示仅保存本地，不转发
-    'Save Netflix temporary access codes locally'
+    'All Emails',           // 规则名称
+    1,                      // 启用
+    '*',                    // 接受所有发件人
+    null,                   // 不过滤主题
+    null,                   // 不过滤内容
+    null,                   // 不排除任何词
+    '',                     // 留空表示仅保存本地，不转发
+    'Accept all emails from Gmail forwarding'
   );
 
   console.log(`✅ Rule added successfully with ID: ${result.lastInsertRowid}`);

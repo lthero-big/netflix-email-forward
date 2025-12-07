@@ -317,18 +317,25 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              {selectedEmail.body && (
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    邮件内容
-                  </p>
-                  <div className="bg-slate-50 p-4 rounded-lg mt-2 border border-slate-200 max-h-64 overflow-y-auto">
-                    <pre className="text-sm text-slate-700 whitespace-pre-wrap break-words">
+              <div>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  邮件内容
+                </p>
+                <div className="bg-slate-50 p-4 rounded-lg mt-2 border border-slate-200 max-h-96 overflow-y-auto">
+                  {selectedEmail.html_body ? (
+                    <div 
+                      className="prose prose-sm max-w-none" 
+                      dangerouslySetInnerHTML={{ __html: selectedEmail.html_body }}
+                    />
+                  ) : selectedEmail.body ? (
+                    <pre className="text-sm text-slate-700 whitespace-pre-wrap break-words font-mono">
                       {selectedEmail.body}
                     </pre>
-                  </div>
+                  ) : (
+                    <p className="text-slate-500 text-sm italic">无邮件内容</p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Modal Footer */}

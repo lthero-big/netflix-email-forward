@@ -10,6 +10,7 @@ export interface EmailMessage {
   to: string;
   subject: string;
   body: string;
+  html?: string;
   messageId?: string;
 }
 
