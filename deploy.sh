@@ -102,6 +102,12 @@ else
     echo -e "${GREEN}✅ .env.local 文件已存在${NC}"
 fi
 
+# 从 .env.local 加载环境变量到当前 shell
+if [ -f ".env.local" ]; then
+    export $(grep -v '^#' .env.local | xargs)
+    echo -e "${GREEN}✅ 环境变量已加载 (PORT=${PORT:-3000})${NC}"
+fi
+
 # 安装依赖
 echo -e "${YELLOW}📦 正在安装依赖...${NC}"
 if npm install; then
@@ -142,8 +148,8 @@ if command -v pm2 &> /dev/null; then
     pm2 delete email-forward 2>/dev/null
     
     # 启动新进程
-    echo -e "${YELLOW}🚀 正在启动服务 (PM2)...${NC}"
-    if pm2 start npm --name "email-forward" -- start; then
+    echo -e "${YELLOW}🚀 正在启动服务 (PM2) 端口: ${PORT:-3000}...${NC}"
+    if PORT=${PORT:-3303} pm2 start npm --name "email-forward" --update-env -- start; then
         pm2 save
         echo -e "${GREEN}✅ 服务启动成功！${NC}"
         echo ""
@@ -160,9 +166,9 @@ else
     echo -e "${YELLOW}⚠️  未检测到 PM2，使用 npm start 启动...${NC}"
     echo -e "${YELLOW}💡 建议安装 PM2 以便更好地管理进程: npm install -g pm2${NC}"
     echo ""
-    echo -e "${GREEN}🚀 启动服务...${NC}"
+    echo -e "${GREEN}🚀 启动服务 (端口: ${PORT:-3000})...${NC}"
     echo -e "${YELLOW}提示: 按 Ctrl+C 停止服务${NC}"
-    npm start
+    PORT=${PORT:-3303} npm start
 fi
 
 echo ""
