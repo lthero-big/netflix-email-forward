@@ -80,7 +80,13 @@ export default function DashboardPage() {
       const data: ApiResponse = await response.json();
 
       if (data.success) {
-        setEmails(data.data);
+        // 过滤掉已过期的邮件（前端过滤）
+        const now = new Date().getTime();
+        const validEmails = data.data.filter((email: ForwardedEmail) => {
+          return new Date(email.expires_at).getTime() > now;
+        });
+        
+        setEmails(validEmails);
         setStats(data.stats);
         
         // 获取过期时间配置
@@ -241,11 +247,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200">
             <h2 className="text-lg font-semibold text-slate-900">收到的邮件</h2>
-            <p className="text-sm text-slate-600 mt-1">
-              最近 20 条邮件（{expiryMinutes >= 60 
-                ? `${Math.floor(expiryMinutes / 60)}小时${expiryMinutes % 60 > 0 ? expiryMinutes % 60 + '分钟' : ''}后自动删除`
-                : `${expiryMinutes}分钟后自动删除`}）
-            </p>
+            <p className="text-sm text-slate-600 mt-1">最近 20 条邮件</p>
           </div>
 
           {isLoading ? (

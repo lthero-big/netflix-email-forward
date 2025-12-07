@@ -3,7 +3,8 @@ import {
   getForwardedEmails, 
   getForwardedEmailsCount, 
   getForwardedEmailById,
-  getDatabaseStats 
+  getDatabaseStats,
+  deleteExpiredEmails
 } from '@/lib/db/queries';
 
 /**
@@ -27,6 +28,9 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // 每次查询时自动清理过期邮件
+    deleteExpiredEmails();
 
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);

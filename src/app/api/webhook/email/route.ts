@@ -10,6 +10,12 @@ import { simpleParser } from 'mailparser';
  */
 export async function POST(request: NextRequest) {
   try {
+    // 每次接收邮件时自动清理过期邮件
+    const deletedCount = deleteExpiredEmails();
+    if (deletedCount > 0) {
+      console.log(`🗑️  Auto-cleaned ${deletedCount} expired emails`);
+    }
+
     // 验证 API 密钥（可选，用于安全性）
     const apiKey = request.headers.get('x-api-key');
     const expectedKey = process.env.WEBHOOK_API_KEY;
