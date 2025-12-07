@@ -225,15 +225,11 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
               <p className="text-sm font-medium text-slate-600">总规则数</p>
               <p className="text-3xl font-bold text-slate-900 mt-2">{stats.totalRules}</p>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">收到的邮件</h2>
-            <p className="text-sm text-slate-600 mt-1">
-              最近 20 条邮件（{expiryMinutes >= 60 
-                ? `${Math.floor(expiryMinutes / 60)}小时${expiryMinutes % 60 > 0 ? expiryMinutes % 60 + '分钟' : ''}后自动删除`
-                : `${expiryMinutes}分钟后自动删除`}）
-            </p>
+              <p className="text-xs text-slate-500 mt-1">配置的转发规则</p>
+            </div>
           </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-700">
@@ -245,7 +241,11 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200">
             <h2 className="text-lg font-semibold text-slate-900">收到的邮件</h2>
-            <p className="text-sm text-slate-600 mt-1">最近 20 条邮件（7天后自动删除）</p>
+            <p className="text-sm text-slate-600 mt-1">
+              最近 20 条邮件（{expiryMinutes >= 60 
+                ? `${Math.floor(expiryMinutes / 60)}小时${expiryMinutes % 60 > 0 ? expiryMinutes % 60 + '分钟' : ''}后自动删除`
+                : `${expiryMinutes}分钟后自动删除`}）
+            </p>
           </div>
 
           {isLoading ? (
