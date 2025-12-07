@@ -146,6 +146,16 @@ export function deleteExpiredEmails(): number {
 }
 
 /**
+ * 删除指定的邮件
+ */
+export function deleteEmailById(id: number): boolean {
+  const db = getDatabase();
+  const stmt = db.prepare('DELETE FROM forwarded_emails WHERE id = ?');
+  const result = stmt.run(id);
+  return result.changes > 0;
+}
+
+/**
  * 检查邮件是否已处理过（避免重复）
  */
 export function emailExists(messageId: string): boolean {

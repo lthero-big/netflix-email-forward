@@ -46,6 +46,8 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [selectedEmail, setSelectedEmail] = useState<ForwardedEmail | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expiryMinutes, setExpiryMinutes] = useState<number>(30);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const router = useRouter();
 
   const fetchEmails = useCallback(async () => {
@@ -80,6 +82,19 @@ export default function DashboardPage() {
       if (data.success) {
         setEmails(data.data);
         setStats(data.stats);
+        
+        // 获取过期时间配置
+        const configResponse = await fetch('/api/config', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (configResponse.ok) {
+          const configData = await configResponse.json();
+          if (configData.expiryMinutes) {
+            setExpiryMinutes(configData.expiryMinutes);
+          }
+        }
       } else {
         setError(data.error || 'Failed to fetch emails');
       }
@@ -113,6 +128,57 @@ export default function DashboardPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedEmail(null);
+  };
+
+  const handleDeleteEmail = async (emailId: number) => {
+    if (!confirm('确定要删除这封邮件吗？')) {
+      return;
+    }
+
+    setDeletingId(emailId);
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`/api/emails/${emailId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('auth_token');
+        router.push('/login');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to delete email');
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        // 从列表中移除已删除的邮件
+        setEmails(emails.filter(email => email.id !== emailId));
+        // 如果删除的是当前查看的邮件，关闭模态框
+        if (selectedEmail?.id === emailId) {
+          closeModal();
+        }
+      } else {
+        alert('删除失败: ' + (data.error || '未知错误'));
+      }
+    } catch (err) {
+      alert('删除失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      console.error('Delete error:', err);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -159,11 +225,15 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
               <p className="text-sm font-medium text-slate-600">总规则数</p>
               <p className="text-3xl font-bold text-slate-900 mt-2">{stats.totalRules}</p>
-              <p className="text-xs text-slate-500 mt-1">配置的转发规则</p>
-            </div>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-900">收到的邮件</h2>
+            <p className="text-sm text-slate-600 mt-1">
+              最近 20 条邮件（{expiryMinutes >= 60 
+                ? `${Math.floor(expiryMinutes / 60)}小时${expiryMinutes % 60 > 0 ? expiryMinutes % 60 + '分钟' : ''}后自动删除`
+                : `${expiryMinutes}分钟后自动删除`}）
+            </p>
           </div>
-        )}
-
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-700">
@@ -235,12 +305,19 @@ export default function DashboardPage() {
                           locale: zhCN,
                         })}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
                         <button
                           onClick={() => handleViewEmail(email)}
                           className="text-blue-600 hover:text-blue-800 font-medium transition"
                         >
                           查看详情
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEmail(email.id)}
+                          disabled={deletingId === email.id}
+                          className="text-red-600 hover:text-red-800 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingId === email.id ? '删除中...' : '删除'}
                         </button>
                       </td>
                     </tr>
