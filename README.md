@@ -287,7 +287,16 @@ chmod 664 emails.db
 
 ## 📄 许可证
 
-MIT License
+AGPL-3.0 License
+
+本项目采用 GNU Affero General Public License v3.0 许可证：
+
+- ✅ 允许自由使用、修改和分发
+- ✅ 开源代码，保障用户自由
+- ⚠️ **商用必须开源**：如果您修改并在网络服务中使用本软件，必须公开修改后的源代码
+- 🔒 保护开源社区的利益
+
+详细许可证内容请查看 [LICENSE](LICENSE) 文件或访问 [GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)。
 
 ---
 
