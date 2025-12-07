@@ -3,7 +3,7 @@
  * 根据转发规则判断邮件是否应该被转发
  */
 
-import type { ForwardRule } from './queries';
+import type { ForwardRule } from './db/queries';
 
 export interface EmailMessage {
   from: string;
