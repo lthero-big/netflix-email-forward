@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnabledRules, saveForwardedEmail, emailExists, deleteExpiredEmails } from '@/lib/db/queries';
 import { findMatchingRule, type EmailMessage } from '@/lib/emailFilter';
-import { addDays } from 'date-fns';
+import { addMinutes } from 'date-fns';
 import { simpleParser } from 'mailparser';
 
 /**
@@ -16,8 +16,11 @@ export async function POST(request: NextRequest) {
     
     console.log('📨 Webhook request received');
     console.log('   API Key provided:', apiKey ? apiKey.substring(0, 20) + '...' : 'NONE');
+    console.log('   API Key provided (full):', apiKey || 'NONE');
     console.log('   Expected API Key:', expectedKey ? expectedKey.substring(0, 20) + '...' : 'NOT CONFIGURED');
+    console.log('   Expected API Key (full):', expectedKey || 'NOT CONFIGURED');
     console.log('   Content-Type:', request.headers.get('content-type'));
+    console.log('   Keys match:', apiKey === expectedKey);
     
     if (apiKey && apiKey !== expectedKey) {
       console.error('❌ API Key mismatch!');
@@ -109,7 +112,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 保存邮件到数据库
-    const expiresAt = addDays(new Date(), 7).toISOString();
+    // 从环境变量读取过期时间（分钟），默认 30 分钟
+    const expiryMinutes = parseInt(process.env.EMAIL_EXPIRY_MINUTES || '30', 10);
+    const expiresAt = addMinutes(new Date(), expiryMinutes).toISOString();
     const emailId = saveForwardedEmail({
       message_id: mailData.messageId || null,
       rule_id: matchedRule.id,
