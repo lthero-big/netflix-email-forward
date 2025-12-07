@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -8,13 +7,23 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // 检查是否已登录，如果已登录则跳转到仪表板
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      router.push('/dashboard');
-    }
+    // 直接跳转到登录页面
+    router.push('/login');
   }, [router]);
 
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="text-center text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+        <p>正在跳转到登录页面...</p>
+      </div>
+    </div>
+  );
+}
+
+/*
+// 以下内容已移除，直接跳转到登录页面
+export default function HomeOld() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}

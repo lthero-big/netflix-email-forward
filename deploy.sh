@@ -82,8 +82,8 @@ echo -e "${GREEN}✅ Node.js 版本检查通过: $(node -v)${NC}"
 if [ ! -f ".env.local" ]; then
     echo -e "${YELLOW}⚠️  未找到 .env.local 文件，正在创建...${NC}"
     cat > .env.local << 'EOF'
-# 管理员密码哈希值
-ADMIN_PASSWORD_HASH=240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9
+# 管理员密码（明文，系统会自动加密）
+ADMIN_PASSWORD=admin123
 
 # Webhook API 密钥（与 Cloudflare Worker 保持一致）
 WEBHOOK_API_KEY=Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=
@@ -98,6 +98,7 @@ DATABASE_PATH=./emails.db
 DEBUG=false
 EOF
     echo -e "${GREEN}✅ .env.local 文件已创建${NC}"
+    echo -e "${YELLOW}⚠️  默认密码: admin123，请在 .env.local 中修改 ADMIN_PASSWORD${NC}"
 else
     echo -e "${GREEN}✅ .env.local 文件已存在${NC}"
 fi
