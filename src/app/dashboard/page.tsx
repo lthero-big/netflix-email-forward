@@ -87,7 +87,14 @@ export default function DashboardPage() {
         });
         
         setEmails(validEmails);
-        setStats(data.stats);
+        
+        // 更新统计数据，只显示未过期的邮件数量
+        const updatedStats = {
+          ...data.stats,
+          activeEmails: validEmails.length,
+          totalEmails: validEmails.length,
+        };
+        setStats(updatedStats);
         
         // 获取过期时间配置
         const configResponse = await fetch('/api/config', {
