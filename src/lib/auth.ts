@@ -21,12 +21,20 @@ export function validatePassword(password: string): boolean {
   // 如果没有配置密码，拒绝登录
   if (!plainPassword) {
     console.error('No password configured in environment (ADMIN_PASSWORD)');
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('ADMIN') || k.includes('PASSWORD')));
     return false;
   }
 
   // 将用户配置的明文密码和输入的密码都进行哈希后比较
   const storedPasswordHash = hashPassword(plainPassword);
   const inputPasswordHash = hashPassword(password);
+
+  console.log('Password validation:', {
+    configured: !!plainPassword,
+    configuredHash: storedPasswordHash.substring(0, 10) + '...',
+    inputHash: inputPasswordHash.substring(0, 10) + '...',
+    match: storedPasswordHash === inputPasswordHash
+  });
 
   return storedPasswordHash === inputPasswordHash;
 }
