@@ -6,7 +6,7 @@
 
 - **密码保护**：SHA-256 加密存储，保护邮件隐私
 - **智能过滤**：按来源、主题、内容进行多维度过滤
-- **自动清理**：邮件保存 7 天后自动删除
+- **自动清理**：邮件过期后自动删除（默认30分钟，可配置）
 - **本地存储**：SQLite 数据库，数据完全掌控
 - **Cloudflare 集成**：通过 Email Routing + Worker 接收邮件
 - **响应式 UI**：基于 Tailwind CSS，支持移动端
@@ -59,19 +59,24 @@ cp .env.example .env.local
 nano .env.local  # 修改密码和 API 密钥
 
 # 修改配置：
-# ADMIN_PASSWORD=your-strong-password  # 修改默认密码
-# WEBHOOK_API_KEY=$(openssl rand -base64 32)  # 生成随机密钥
-# PORT=3303  # 修改端口（可选）
+# ADMIN_PASSWORD=your-strong-password        # 修改默认密码
+# WEBHOOK_API_KEY=$(openssl rand -base64 32) # 生成随机密钥
+# WEB_APP_URL=https://your-domain.com        # 配置访问地址（域名或 IP:端口）
+# PORT=3303                                  # 修改端口（可选）
+# EMAIL_EXPIRY_MINUTES=30                    # 邮件过期时间（分钟，默认30）
 
 # 4. 运行一键部署脚本
 bash deploy.sh
 
 # 脚本会自动完成：
-# - 检查 Node.js 环境
+# - 检查并安装 Node.js 20 LTS（如需要）
+# - 加载 .env.local 环境变量
 # - 安装依赖
 # - 初始化数据库
 # - 构建项目
 # - 使用 PM2 启动服务
+# - 自动更新 cloudflare-worker.js 配置（WEB_APP_URL 和 WEBHOOK_API_KEY）
+# - 显示访问地址和外网 IP
 ```
 
 **重要**：生产环境请务必修改默认密码和 API 密钥！
@@ -85,8 +90,8 @@ bash deploy.sh
 ### 2. 设置环境变量
 
 在 Worker Settings → Variables 添加：
-- `WEB_APP_URL`: `https://nfcode.lthero.cn`
-- `WEBHOOK_API_KEY`: `Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=`
+- `WEB_APP_URL`: `https://your-domain.com` 或 `http://your-server-ip:3303`
+- `WEBHOOK_API_KEY`: 与 `.env.local` 中的 `WEBHOOK_API_KEY` 保持一致
 
 ### 3. 配置 Email Routing
 
@@ -193,10 +198,13 @@ stmt.run(
 ## 🧪 测试
 
 ```bash
-# 测试邮件接收
+# 测试邮件接收（使用测试脚本，自动读取 .env.local）
+node scripts/testWorkerUpload.js
+
+# 或手动测试（需替换为实际的 API Key）
 curl -X POST http://localhost:3000/api/webhook/email \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=" \
+  -H "X-API-Key: your-webhook-api-key-here" \
   -d '{
     "from": "info@account.netflix.com",
     "to": "test@example.com",
@@ -210,16 +218,22 @@ curl -X POST http://localhost:3000/api/webhook/email \
 
 ## 🛠️ 维护
 
-### 定期清理过期邮件
+### 邮件自动清理
 
+系统会在以下情况自动清理过期邮件：
+- 每次接收新邮件时
+- 每次查询邮件列表时
+- 前端自动过滤已过期邮件
+
+过期时间可通过 `.env.local` 配置：
 ```bash
-# 手动清理
-curl -X GET "http://localhost:3000/api/webhook/email?action=cleanup"
+# 邮件过期时间（分钟），默认 30 分钟
+EMAIL_EXPIRY_MINUTES=30
+```
 
-# 或设置 cron 定时任务（每天凌晨 2 点）
-crontab -e
-# 添加：
-0 2 * * * curl -X GET "http://localhost:3303/api/webhook/email?action=cleanup"
+手动触发清理：
+```bash
+curl -X GET "http://localhost:3303/api/webhook/email?action=cleanup"
 ```
 
 ### 数据库管理
