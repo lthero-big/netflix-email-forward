@@ -29,7 +29,7 @@ export default {
     if (url.pathname === '/test' && request.method === 'POST') {
       try {
         const testEmail = await request.json();
-        const WEB_APP_URL = env.WEB_APP_URL || 'https://nfcode.lthero.cn';
+        const WEB_APP_URL = env.WEB_APP_URL || 'http://your-server-ip:3303';
         const API_KEY = env.WEBHOOK_API_KEY || '';
         
         const response = await fetch(`${WEB_APP_URL}/api/webhook/email`, {
@@ -75,11 +75,11 @@ export default {
   async email(message, env, ctx) {
     try {
       // 你的 Web 应用地址（建议从环境变量读取）
-      const WEB_APP_URL = env.WEB_APP_URL || 'https://nfcode.lthero.cn';
+      const WEB_APP_URL = env.WEB_APP_URL || 'http://your-server-ip:3303';
       
       // API 密钥（必须与 Web 应用的 WEBHOOK_API_KEY 保持一致）
       // 在 Worker Settings → Variables 中设置 WEBHOOK_API_KEY
-      const API_KEY = env.WEBHOOK_API_KEY || 'Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=';
+      const API_KEY = env.WEBHOOK_API_KEY || 'your-webhook-api-key-here';
       
       console.log('Receiving email from:', message.from, 'to:', message.to);
       

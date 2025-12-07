@@ -91,6 +91,9 @@ WEBHOOK_API_KEY=Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=
 # 服务器端口
 PORT=3303
 
+# Web 应用访问 URL（用于 Cloudflare Worker 配置）
+WEB_APP_URL=http://your-server-ip:3303
+
 # 数据库路径
 DATABASE_PATH=./emails.db
 
@@ -107,6 +110,16 @@ fi
 if [ -f ".env.local" ]; then
     export $(grep -v '^#' .env.local | xargs)
     echo -e "${GREEN}✅ 环境变量已加载 (PORT=${PORT:-3000})${NC}"
+fi
+
+# 更新 Cloudflare Worker 配置中的 URL
+if [ -f "cloudflare-worker.js" ] && [ -n "${WEB_APP_URL}" ]; then
+    echo -e "${YELLOW}🔧 正在更新 Cloudflare Worker 配置...${NC}"
+    # 备份原文件
+    cp cloudflare-worker.js cloudflare-worker.js.bak 2>/dev/null
+    # 替换默认 URL
+    sed -i.tmp "s|https://nfcode.lthero.cn|${WEB_APP_URL}|g" cloudflare-worker.js && rm cloudflare-worker.js.tmp 2>/dev/null || true
+    echo -e "${GREEN}✅ Worker 配置已更新为: ${WEB_APP_URL}${NC}"
 fi
 
 # 安装依赖
@@ -176,10 +189,27 @@ echo ""
 echo -e "${GREEN}🎉 部署完成！${NC}"
 echo ""
 echo -e "${GREEN}📍 访问地址:${NC}"
-echo -e "   本地: http://localhost:3303"
-echo -e "   公网: https://nfcode.lthero.cn"
+echo -e "   本地: http://localhost:${PORT:-3303}"
+
+# 获取外网 IP
+EXTERNAL_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "无法获取")
+if [ "$EXTERNAL_IP" != "无法获取" ]; then
+    echo -e "   外网: http://${EXTERNAL_IP}:${PORT:-3303}"
+fi
+
+# 如果配置了自定义域名
+if [ -n "${WEB_APP_URL}" ] && [ "${WEB_APP_URL}" != "http://your-server-ip:3303" ]; then
+    echo -e "   自定义: ${WEB_APP_URL}"
+fi
+
 echo ""
-echo -e "${GREEN}🔑 登录密码: admin123${NC}"
-echo -e "${GREEN}🔐 API 密钥: Gk1NGvD8QhuxOQ//5yNdrmrkg8+2UFweMGY5BYLjGkU=${NC}"
+echo -e "${GREEN}🔑 登录密码: ${ADMIN_PASSWORD:-admin123}${NC}"
+echo -e "${GREEN}🔐 API 密钥: ${WEBHOOK_API_KEY}${NC}"
 echo ""
-echo -e "${YELLOW}⚠️  别忘了在 Cloudflare Worker 中设置相同的 API 密钥！${NC}"
+echo -e "${YELLOW}📝 配置 Cloudflare Worker:${NC}"
+echo -e "   1. 复制 cloudflare-worker.js 内容到 Cloudflare Worker"
+echo -e "   2. 设置环境变量:"
+echo -e "      - WEB_APP_URL: ${WEB_APP_URL:-http://${EXTERNAL_IP}:${PORT:-3303}}"
+echo -e "      - WEBHOOK_API_KEY: ${WEBHOOK_API_KEY}"
+echo ""
+echo -e "${YELLOW}💡 提示: cloudflare-worker.js 中的默认 URL 已更新为你的配置${NC}"
