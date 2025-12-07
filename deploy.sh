@@ -13,14 +13,67 @@ NC='\033[0m' # No Color
 
 # 检查 Node.js
 if ! command -v node &> /dev/null; then
-    echo -e "${RED}❌ 未检测到 Node.js，请先安装 Node.js 18+${NC}"
-    exit 1
+    echo -e "${RED}❌ 未检测到 Node.js${NC}"
+    echo -e "${YELLOW}是否需要自动安装 Node.js 20 LTS？(y/n)${NC}"
+    read -r INSTALL_NODE
+    
+    if [[ "$INSTALL_NODE" =~ ^[Yy]$ ]]; then
+        echo -e "${GREEN}📦 开始安装 Node.js 20 LTS...${NC}"
+        
+        # 检测操作系统
+        if [ -f /etc/debian_version ]; then
+            # Debian/Ubuntu
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+        elif [ -f /etc/redhat-release ]; then
+            # CentOS/RHEL
+            curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+            sudo yum install -y nodejs
+        else
+            echo -e "${RED}❌ 未识别的操作系统，请手动安装 Node.js 18+${NC}"
+            echo -e "${YELLOW}访问: https://nodejs.org/${NC}"
+            exit 1
+        fi
+        
+        # 验证安装
+        if ! command -v node &> /dev/null; then
+            echo -e "${RED}❌ Node.js 安装失败${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}✅ Node.js 安装成功: $(node -v)${NC}"
+    else
+        echo -e "${YELLOW}请手动安装 Node.js 18+ 后重新运行此脚本${NC}"
+        echo -e "${YELLOW}访问: https://nodejs.org/${NC}"
+        exit 1
+    fi
 fi
 
 NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
 if [ "$NODE_VERSION" -lt 18 ]; then
-    echo -e "${RED}❌ Node.js 版本过低 (当前: v$NODE_VERSION)，需要 18+${NC}"
-    exit 1
+    echo -e "${RED}❌ Node.js 版本过低 (当前: $(node -v))，需要 18+${NC}"
+    echo -e "${YELLOW}是否需要升级到 Node.js 20 LTS？(y/n)${NC}"
+    read -r UPGRADE_NODE
+    
+    if [[ "$UPGRADE_NODE" =~ ^[Yy]$ ]]; then
+        echo -e "${GREEN}📦 开始升级 Node.js...${NC}"
+        
+        # 检测操作系统
+        if [ -f /etc/debian_version ]; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+        elif [ -f /etc/redhat-release ]; then
+            curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+            sudo yum install -y nodejs
+        else
+            echo -e "${RED}❌ 未识别的操作系统，请手动升级 Node.js${NC}"
+            exit 1
+        fi
+        
+        echo -e "${GREEN}✅ Node.js 升级成功: $(node -v)${NC}"
+    else
+        echo -e "${YELLOW}请手动升级 Node.js 到 18+ 后重新运行此脚本${NC}"
+        exit 1
+    fi
 fi
 
 echo -e "${GREEN}✅ Node.js 版本检查通过: $(node -v)${NC}"
