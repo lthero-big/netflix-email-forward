@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p ${PORT:-3000}",
+    "dev": "node scripts/startServer.js dev",
+    "dev:direct": "next dev -p ${PORT:-3000}",
     "build": "next build",
-    "start": "next start -p ${PORT:-3000}",
+    "start": "node scripts/startServer.js start",
+    "start:direct": "next start -p ${PORT:-3000}",
     "lint": "eslint",
     "add-rule": "node scripts/addRule.js",
     "test-email": "node scripts/testEmail.js",
