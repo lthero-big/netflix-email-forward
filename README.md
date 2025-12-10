@@ -81,6 +81,45 @@ bash deploy.sh
 
 **重要**：生产环境请务必修改默认密码和 API 密钥！
 
+### Vercel 部署
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/lthero-big/netflix-email-forward)
+
+**⚠️ 注意**：Vercel 部署需要手动配置环境变量，不会使用 `.env.local` 文件。
+
+1. **点击上方按钮部署到 Vercel**
+
+2. **配置环境变量**（在 Vercel Dashboard → Settings → Environment Variables 中添加）：
+   ```
+   ADMIN_PASSWORD=admin123                    # ⚠️ 请修改为强密码
+   WEBHOOK_API_KEY=your-generated-api-key     # ⚠️ 使用 openssl rand -base64 32 生成
+   WEB_APP_URL=https://your-app.vercel.app    # 部署后的 Vercel 域名
+   EMAIL_EXPIRY_MINUTES=30                     # 邮件过期时间（分钟）
+   ```
+
+3. **生成 API 密钥**：
+   ```bash
+   # 本地执行生成随机密钥
+   openssl rand -base64 32
+   # 将生成的密钥填入 WEBHOOK_API_KEY
+   ```
+
+4. **重新部署**：修改环境变量后，点击 Vercel Dashboard 的 "Redeploy" 使配置生效
+
+5. **初始化数据库**：
+   - Vercel 部署后，首次访问会自动创建数据库
+   - 默认已包含通配符规则（接收所有邮件）
+
+**默认配置（⚠️ 仅用于测试，生产环境必须修改）**：
+- 登录密码：`admin123`
+- API 密钥：需要自己生成（Vercel 不使用 `.env.example` 中的默认值）
+- 访问地址：`https://your-app.vercel.app`
+
+**Vercel 特别说明**：
+- ⚠️ **必须配置所有环境变量**，否则应用无法正常工作
+- 📝 数据库存储在 Vercel 的临时文件系统，重新部署会丢失数据
+- 🔄 建议定期备份数据库或使用外部数据库（如 PlanetScale、Supabase）
+
 ## 🌐 Cloudflare 配置
 
 ### 1. 创建 Email Worker
