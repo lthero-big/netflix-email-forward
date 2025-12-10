@@ -9,8 +9,12 @@ let db: Database.Database | null = null;
 export function getDatabase(): Database.Database {
   if (db) return db;
 
-  // 在项目根目录创建 SQLite 数据库文件
-  const dbPath = path.join(process.cwd(), 'emails.db');
+  // 在 Vercel 等无服务器环境使用 /tmp 目录，本地使用项目根目录
+  const isVercel = process.env.VERCEL === '1';
+  const dbPath = isVercel 
+    ? '/tmp/emails.db' 
+    : path.join(process.cwd(), 'emails.db');
+  
   db = new Database(dbPath);
   
   // 启用外键支持
@@ -70,6 +74,24 @@ function initializeSchema() {
     db.exec('CREATE INDEX IF NOT EXISTS idx_forwarded_emails_created_at ON forwarded_emails(created_at)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_forwarded_emails_expires_at ON forwarded_emails(expires_at)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_forwarded_emails_message_id ON forwarded_emails(message_id)');
+
+    // 添加默认规则（如果不存在）
+    const ruleCount = db.prepare('SELECT COUNT(*) as count FROM forward_rules').get() as { count: number };
+    if (ruleCount.count === 0) {
+      db.prepare(`
+        INSERT INTO forward_rules (name, enabled, from_addr, subject_contains, body_contains, forward_to, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'All Emails',
+        1,
+        '*',
+        null,
+        null,
+        '',
+        'Accept all emails (wildcard rule)'
+      );
+      console.log('✅ Default forwarding rule added');
+    }
 
     console.log('✅ Database schema initialized successfully');
   } catch (error) {
