@@ -93,9 +93,10 @@ bash deploy.sh
    ```
    ADMIN_PASSWORD=admin123                    # ⚠️ 请修改为强密码
    WEBHOOK_API_KEY=your-generated-api-key     # ⚠️ 使用 openssl rand -base64 32 生成
-   WEB_APP_URL=https://your-app.vercel.app    # 部署后的 Vercel 域名
-   EMAIL_EXPIRY_MINUTES=30                     # 邮件过期时间（分钟）
+   EMAIL_EXPIRY_MINUTES=30                    # 邮件过期时间（分钟，可选）
    ```
+   
+   **注意**：`WEB_APP_URL` 不需要配置，它只用于 `deploy.sh` 自动更新 Worker 配置
 
 3. **生成 API 密钥**：
    ```bash
@@ -113,7 +114,6 @@ bash deploy.sh
 **默认配置（⚠️ 仅用于测试，生产环境必须修改）**：
 - 登录密码：`admin123`
 - API 密钥：需要自己生成（Vercel 不使用 `.env.example` 中的默认值）
-- 访问地址：`https://your-app.vercel.app`
 
 **Vercel 特别说明**：
 - ⚠️ **必须配置所有环境变量**，否则应用无法正常工作
@@ -129,9 +129,11 @@ bash deploy.sh
 ### 2. 设置环境变量
 
 在 Worker Settings → Variables 添加：
-- `WEB_APP_URL`: `https://your-domain.com` 或 `http://your-server-ip:3303`
-- `WEBHOOK_API_KEY`: 与 `.env.local` 中的 `WEBHOOK_API_KEY` 保持一致
-
+在 Worker Settings → Variables 添加：
+- `WEB_APP_URL`: 你的网站地址
+  - Vercel: `https://your-app.vercel.app`
+  - 自建服务器: `https://your-domain.com` 或 `http://your-server-ip:3303`
+- `WEBHOOK_API_KEY`: 与网站环境变量中的 `WEBHOOK_API_KEY` 保持一致
 ### 3. 配置 Email Routing
 
 1. **Email** → **Email Routing** → 启用
